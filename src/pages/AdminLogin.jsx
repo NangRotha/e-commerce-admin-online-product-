@@ -11,7 +11,7 @@ const AdminLogin = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(''); // បន្ថែម State សម្រាប់បង្ហាញកំហុស
+  const [errorMessage, setErrorMessage] = useState(''); // State for error messages
   const { login } = useAdminAuth();
   const navigate = useNavigate();
 
@@ -20,7 +20,7 @@ const AdminLogin = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
-    setErrorMessage(''); // ពេលអ្នកវាយកែ លុបសារកំហុសចាស់ចោល
+    setErrorMessage(''); // Clear error when user types
   };
 
   const handleSubmit = async (e) => {
@@ -28,13 +28,13 @@ const AdminLogin = () => {
     setLoading(true);
     setErrorMessage('');
 
-    // ហៅអោយទៅ Login
+    // Try to login
     const result = await login(formData.username, formData.password);
     
     if (result.success) {
-      navigate('/admin'); // បើជោគជ័យ ប្តូរទៅ Dashboard
+      navigate('/admin'); // Redirect to Dashboard on success
     } else {
-      setErrorMessage(result.message || 'ឈ្មោះអ្នកប្រើ ឬ ពាក្យសម្ងាត់មិនត្រឹមត្រូវ'); // បង្ហាញសារកំហុស
+      setErrorMessage(result.message || 'មានបញ្ហាក្នុងការចូលប្រើ'); // Show error on screen
     }
     
     setLoading(false);
@@ -66,9 +66,9 @@ const AdminLogin = () => {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           
-          {/* បង្ហាញ Error Message នៅទីនេះ */}
+          {/* Error Message Display */}
           {errorMessage && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm text-center">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm text-center animate-pulse">
               {errorMessage}
             </div>
           )}

@@ -7,7 +7,7 @@ export const AdminAuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ពិនិត្យមើលថាតើអ្នកប្រើបាន Login រួចហើយឬនៅពេល Refresh ទំព័រ
+  // Check if user is already logged in when page refreshes
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
     const userData = localStorage.getItem('admin_user');
@@ -25,28 +25,37 @@ export const AdminAuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      // ផ្ញើ Request ទៅ Backend
-      const response = await api.post('/admin/auth/login', { username, password });
+      console.log('🟡 Attempting login at path: /auth/login');
+
+      // ✅ FIXED: Removed "/admin" because your Backend expects /auth/login
+      // (api.js automatically adds the /api prefix for us)
+      const response = await api.post('/auth/login', { username, password });
       
-      // ពិនិត្យមើល Data ដែល Backend បញ្ជូនមក
-      // ខាងក្រោមនេះសន្មតថា Backend បញ្ជូនមកដូចជា: { token: "xxxx", user: { ... } }
+      // Check if Backend sent a token
       if (response && response.token) {
-        // 🔥 ចំណុចសំខាន់: Save ត្រូវដាក់ឈ្មោះឱ្យត្រូវគ្នានឹង api.js
         localStorage.setItem('admin_token', response.token); 
         localStorage.setItem('admin_user', JSON.stringify(response.user || { role: 'admin' }));
-        
         setUser(response.user || { role: 'admin' });
+        console.log('✅ Login successful!');
         return { success: true };
       } else {
-        // ករណី Backend មិនបញ្ជូន Token មក (ឧ. ឈ្មោះឬលេខសម្ងាត់ខុស)
-        return { success: false, message: 'ព័ត៌មានមិនត្រឹមត្រូវ' };
+        return { success: false, message: 'Backend did not send a token.' };
       }
     } catch (error) {
-      console.error('Login error:', error);
-      // ចាប់កំហុសពី Backend មកបង្ហាញ
+      console.error('❌ Login error:', error);
+      
+      // Handle 401 (Wrong Username/Password) specifically
+      if (error.response?.status === 401) {
+        return { 
+          success: false, 
+          message: 'ឈ្មោះអ្នកប្រើ ឬ ពាក្យសម្ងាត់មិនត្រឹមត្រូវ' 
+        };
+      }
+
+      // Handle other errors (Network issues, 500 Server error, etc.)
       return { 
         success: false, 
-        message: error.response?.data?.message || 'ការចូលប្រើបរាជ័យ' 
+        message: error.response?.data?.message || 'ការចូលប្រើបរាជ័យ (សូមពិនិត្យបណ្តាញ)' 
       };
     }
   };

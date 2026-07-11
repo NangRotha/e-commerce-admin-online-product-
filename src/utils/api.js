@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://e-commerce-backend-online-product.onrender.com/api/admin';
+const API_URL = 'https://e-commerce-backend-online-product.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -9,7 +9,7 @@ const api = axios.create({
   },
 });
 
-// បញ្ចូល Token ទៅក្នុង Header រាល់ Request
+// Add token to every request
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('admin_token'); 
@@ -21,7 +21,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// គ្រប់គ្រងកំហុស (ដូចជា 401 Unauthorized)
+// Handle errors (like 401 Unauthorized)
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
