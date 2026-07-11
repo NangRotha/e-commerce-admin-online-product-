@@ -7,7 +7,6 @@ export const AdminAuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Check if user is already logged in when page refreshes
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
     const userData = localStorage.getItem('admin_user');
@@ -27,11 +26,12 @@ export const AdminAuthProvider = ({ children }) => {
     try {
       console.log('🟡 Attempting login at path: /auth/login');
 
-      // ✅ FIXED: Removed "/admin" because your Backend expects /auth/login
-      // (api.js automatically adds the /api prefix for us)
-      const response = await api.post('/auth/login', { username, password });
+      // 💥 FIXED: Send as 'email' because Backend returned 422 error
+      const response = await api.post('/auth/login', { 
+        email: username, 
+        password 
+      });
       
-      // Check if Backend sent a token
       if (response && response.token) {
         localStorage.setItem('admin_token', response.token); 
         localStorage.setItem('admin_user', JSON.stringify(response.user || { role: 'admin' }));
@@ -44,7 +44,13 @@ export const AdminAuthProvider = ({ children }) => {
     } catch (error) {
       console.error('❌ Login error:', error);
       
-      // Handle 401 (Wrong Username/Password) specifically
+      if (error.response?.status === 422) {
+        return { 
+          success: false, 
+          message: 'ទម្រង់ទិន្នន័យមិនត្រឹមត្រូវ (Backend ទាមទារ Email)' 
+        };
+      }
+
       if (error.response?.status === 401) {
         return { 
           success: false, 
@@ -52,10 +58,9 @@ export const AdminAuthProvider = ({ children }) => {
         };
       }
 
-      // Handle other errors (Network issues, 500 Server error, etc.)
       return { 
         success: false, 
-        message: error.response?.data?.message || 'ការចូលប្រើបរាជ័យ (សូមពិនិត្យបណ្តាញ)' 
+        message: error.response?.data?.message || 'ការចូលប្រើបរាជ័យ' 
       };
     }
   };

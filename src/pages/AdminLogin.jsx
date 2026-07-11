@@ -6,12 +6,12 @@ import { FaLock, FaUser, FaEye, FaEyeSlash, FaShieldAlt } from 'react-icons/fa';
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({
-    username: '',
+    username: '', // Still using 'username' in state, but we send it as 'email'
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(''); // State for error messages
+  const [errorMessage, setErrorMessage] = useState('');
   const { login } = useAdminAuth();
   const navigate = useNavigate();
 
@@ -20,7 +20,7 @@ const AdminLogin = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
-    setErrorMessage(''); // Clear error when user types
+    setErrorMessage('');
   };
 
   const handleSubmit = async (e) => {
@@ -28,13 +28,12 @@ const AdminLogin = () => {
     setLoading(true);
     setErrorMessage('');
 
-    // Try to login
     const result = await login(formData.username, formData.password);
     
     if (result.success) {
-      navigate('/admin'); // Redirect to Dashboard on success
+      navigate('/admin');
     } else {
-      setErrorMessage(result.message || 'មានបញ្ហាក្នុងការចូលប្រើ'); // Show error on screen
+      setErrorMessage(result.message || 'មានបញ្ហាក្នុងការចូលប្រើ');
     }
     
     setLoading(false);
@@ -66,17 +65,16 @@ const AdminLogin = () => {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           
-          {/* Error Message Display */}
           {errorMessage && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm text-center animate-pulse">
               {errorMessage}
             </div>
           )}
 
-          {/* Username Field */}
+          {/* Email / Username Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              ឈ្មោះអ្នកប្រើប្រាស់
+              អ៊ីមែល (Email)
             </label>
             <div className="relative">
               <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -87,7 +85,7 @@ const AdminLogin = () => {
                 onChange={handleChange}
                 required
                 className="w-full bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-xl pl-12 pr-4 py-3 text-gray-700 placeholder-gray-400 outline-none focus:border-indigo-400 transition-colors duration-300"
-                placeholder="បញ្ចូលឈ្មោះអ្នកប្រើប្រាស់"
+                placeholder="បញ្ចូលអ៊ីមែលរបស់អ្នក"
               />
             </div>
           </div>
