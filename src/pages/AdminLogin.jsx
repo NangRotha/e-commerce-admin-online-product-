@@ -11,6 +11,7 @@ const AdminLogin = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); // បន្ថែម State សម្រាប់បង្ហាញកំហុស
   const { login } = useAdminAuth();
   const navigate = useNavigate();
 
@@ -19,22 +20,29 @@ const AdminLogin = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
+    setErrorMessage(''); // ពេលអ្នកវាយកែ លុបសារកំហុសចាស់ចោល
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage('');
+
+    // ហៅអោយទៅ Login
     const result = await login(formData.username, formData.password);
+    
     if (result.success) {
-      navigate('/admin');
+      navigate('/admin'); // បើជោគជ័យ ប្តូរទៅ Dashboard
+    } else {
+      setErrorMessage(result.message || 'ឈ្មោះអ្នកប្រើ ឬ ពាក្យសម្ងាត់មិនត្រឹមត្រូវ'); // បង្ហាញសារកំហុស
     }
+    
     setLoading(false);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       
-      {/* Floating Blobs Decoration */}
       <div className="absolute -top-20 -right-20 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl animate-pulse"></div>
       <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-purple-200/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
 
@@ -44,7 +52,6 @@ const AdminLogin = () => {
         transition={{ duration: 0.6 }}
         className="relative z-10 max-w-md w-full bg-white/80 backdrop-blur-xl border border-gray-200/50 rounded-3xl shadow-2xl p-8 md:p-10"
       >
-        {/* Header Icon */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <FaShieldAlt className="text-3xl text-white" />
@@ -58,6 +65,14 @@ const AdminLogin = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          
+          {/* បង្ហាញ Error Message នៅទីនេះ */}
+          {errorMessage && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm text-center">
+              {errorMessage}
+            </div>
+          )}
+
           {/* Username Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

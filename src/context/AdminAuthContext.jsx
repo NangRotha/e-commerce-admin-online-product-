@@ -1,8 +1,73 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '../utils/api';
-import toast from 'react-hot-toast';
 
-export const AdminAuthContext = createContext();
+const AdminAuthContext = createContext();
+
+export const AdminAuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // ពិនិត្យមើលថាតើអ្នកប្រើបាន Login រួចហើយឬនៅពេល Refresh ទំព័រ
+  useEffect(() => {
+    const token = localStorage.getItem('admin_token');
+    const userData = localStorage.getItem('admin_user');
+    
+    if (token && userData) {
+      try {
+        setUser(JSON.parse(userData));
+      } catch (e) {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+      }
+    }
+    setLoading(false);
+  }, []);
+
+  const login = async (username, password) => {
+    try {
+      // ផ្ញើ Request ទៅ Backend
+      const response = await api.post('/admin/auth/login', { username, password });
+      
+      // ពិនិត្យមើល Data ដែល Backend បញ្ជូនមក
+      // ខាងក្រោមនេះសន្មតថា Backend បញ្ជូនមកដូចជា: { token: "xxxx", user: { ... } }
+      if (response && response.token) {
+        // 🔥 ចំណុចសំខាន់: Save ត្រូវដាក់ឈ្មោះឱ្យត្រូវគ្នានឹង api.js
+        localStorage.setItem('admin_token', response.token); 
+        localStorage.setItem('admin_user', JSON.stringify(response.user || { role: 'admin' }));
+        
+        setUser(response.user || { role: 'admin' });
+        return { success: true };
+      } else {
+        // ករណី Backend មិនបញ្ជូន Token មក (ឧ. ឈ្មោះឬលេខសម្ងាត់ខុស)
+        return { success: false, message: 'ព័ត៌មានមិនត្រឹមត្រូវ' };
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      // ចាប់កំហុសពី Backend មកបង្ហាញ
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'ការចូលប្រើបរាជ័យ' 
+      };
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_user');
+    setUser(null);
+    window.location.href = '/admin/login';
+  };
+
+  const value = {
+    user,
+    login,
+    logout,
+    isAuthenticated: !!user,
+    loading
+  };
+
+  return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;
+};
 
 export const useAdminAuth = () => {
   const context = useContext(AdminAuthContext);
@@ -11,77 +76,3 @@ export const useAdminAuth = () => {
   }
   return context;
 };
-
-export const AdminAuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem('admin_token');
-    const savedUser = localStorage.getItem('admin_user');
-    
-    if (token && savedUser) {
-      setUser(JSON.parse(savedUser));
-      setIsAuthenticated(true);
-    }
-    setLoading(false);
-  }, []);
-
-  // ===== កែតម្រូវ Login Function ឱ្យប្រើ FormData + multipart/form-data =====
-  const login = async (username, password) => {
-    try {
-      const formData = new FormData();
-      formData.append('username', username);
-      formData.append('password', password);
-      
-      const response = await api.post('/auth/login', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' } // <--- សំខាន់ខ្លាំងណាស់!
-      });
-      
-      const { access_token } = response;
-      localStorage.setItem('admin_token', access_token);
-      
-      const userData = await api.get('/auth/me');
-      
-      if (!userData.is_admin) {
-        localStorage.removeItem('admin_token');
-        toast.error('អ្នកមិនមែនជា Admin ទេ');
-        return { success: false, error: 'Not authorized' };
-      }
-      
-      localStorage.setItem('admin_user', JSON.stringify(userData));
-      setUser(userData);
-      setIsAuthenticated(true);
-      toast.success('សូមស្វាគមន៍ Admin!');
-      return { success: true };
-    } catch (error) {
-      toast.error(error?.detail || 'ចូលប្រើប្រាស់មិនបានជោគជ័យ');
-      return { success: false, error: error?.detail };
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
-    setUser(null);
-    setIsAuthenticated(false);
-    toast.success('បានចាកចេញពីប្រព័ន្ធ');
-  };
-
-  const value = {
-    user,
-    loading,
-    isAuthenticated,
-    login,
-    logout,
-  };
-
-  return (
-    <AdminAuthContext.Provider value={value}>
-      {children}
-    </AdminAuthContext.Provider>
-  );
-};
-
-export default AdminAuthProvider;
