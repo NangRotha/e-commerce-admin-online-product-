@@ -10,10 +10,10 @@ const api = axios.create({
   },
 });
 
-// Request interceptor - add token to requests
+// Request interceptor - បន្ថែម admin_token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('admin_token'); // <--- កែត្រង់នេះ! (មិនមែន token)
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -24,14 +24,15 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - handle errors
+// Response interceptor - គ្រប់គ្រងកំហុស
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      localStorage.removeItem('admin_token'); // <--- កែត្រង់នេះ!
+      localStorage.removeItem('admin_user');
+      // ប្តូរទៅប្រើ Absolute URL របស់ Vercel Admin
+      window.location.href = 'https://e-commerce-admin-online-product.vercel.app/admin/login'; // <--- កែត្រង់នេះ!
     }
     return Promise.reject(error.response?.data || error.message);
   }
