@@ -9,19 +9,26 @@ const api = axios.create({
   },
 });
 
-// Add token to every request
+// Request interceptor - admin_token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('admin_token'); 
+    const token = localStorage.getItem('admin_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // ប្រសិនបើ config.data គឺជា FormData, កុំបន្ថែម Content-Type
+    // ព្រោះ Axios នឹងបន្ថែមវាដោយស្វ័យប្រវត្តិជាមួយ boundary
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
-// Handle errors (like 401 Unauthorized)
+// Response interceptor
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
