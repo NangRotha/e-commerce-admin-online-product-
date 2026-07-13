@@ -21,7 +21,7 @@ const AdminLogin = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
-    setErrorMessage('');
+    setErrorMessage(''); // សម្អាត Error ពេលអ្នកប្រើវាយបញ្ចូលថ្មី
   };
 
   const handleSubmit = async (e) => {
@@ -29,20 +29,18 @@ const AdminLogin = () => {
     setLoading(true);
     setErrorMessage('');
 
-    // ✅ ប្រើ Try/Catch ព្រោះ Context បាន Throw Error ចេញមក
     try {
-      const result = await login(formData.username, formData.password);
+      // ✅ ហៅ Context Login
+      await login(formData.username, formData.password);
       
-      if (result && result.success) {
-        navigate('/admin');
-      }
+      // ✅ ប្រសិនបើជោគជ័យ ទៅ Dashboard
+      navigate('/admin'); 
     } catch (error) {
-      // ✅ ចាប់ Error Object ហើយទាញ message
-      const errorMessage = error?.message || 'មានបញ្ហាក្នុងការចូលប្រើ';
-      setErrorMessage(errorMessage);
+      // ✅ ចាប់ Error ពី Context ហើយបង្ហាញ
+      setErrorMessage(error.message || 'មានបញ្ហាក្នុងការចូលប្រើ');
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (
@@ -72,7 +70,7 @@ const AdminLogin = () => {
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           
           {errorMessage && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm text-center animate-pulse">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm text-center">
               {errorMessage}
             </div>
           )}
