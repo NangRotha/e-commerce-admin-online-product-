@@ -1,11 +1,16 @@
 // src/pages/AdminLogin.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAdminAuth } from '../context/AdminAuthContext';
 import { motion } from 'framer-motion';
 import { FaLock, FaUser, FaEye, FaEyeSlash, FaShieldAlt } from 'react-icons/fa';
 
 const AdminLogin = () => {
+  // ============================================
+  // ✅ អ្នកអាចកំណត់ Username និង Password ត្រង់នេះ
+  // ============================================
+  const ADMIN_USERNAME = "myadmin";  // ប្តូរទៅតាមចិត្តអ្នក
+  const ADMIN_PASSWORD = "mysecret123"; // ប្តូរទៅតាមចិត្តអ្នក
+
   const [formData, setFormData] = useState({
     username: '', 
     password: '',
@@ -13,7 +18,6 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const { login } = useAdminAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -21,7 +25,7 @@ const AdminLogin = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
-    setErrorMessage(''); // សម្អាត Error ពេលអ្នកប្រើវាយបញ្ចូលថ្មី
+    setErrorMessage('');
   };
 
   const handleSubmit = async (e) => {
@@ -29,23 +33,25 @@ const AdminLogin = () => {
     setLoading(true);
     setErrorMessage('');
 
-    try {
-      // ✅ ហៅ Context Login
-      await login(formData.username, formData.password);
+    // ✅ ពិនិត្យ Username និង Password ជាមួយនឹងអ្វីដែលអ្នកបានកំណត់ខាងលើ
+    if (formData.username === ADMIN_USERNAME && formData.password === ADMIN_PASSWORD) {
       
-      // ✅ ប្រសិនបើជោគជ័យ ទៅ Dashboard
+      // ✅ បង្កើត Token ក្លែងក្លាយសម្រាប់រក្សាទុកនៅក្នុង Browser
+      const fakeToken = "this-is-a-fake-token-for-testing";
+      localStorage.setItem('admin_token', fakeToken);
+      localStorage.setItem('admin_user', JSON.stringify({ username: formData.username }));
+
+      // ✅ ទៅ Dashboard
       navigate('/admin'); 
-    } catch (error) {
-      // ✅ ចាប់ Error ពី Context ហើយបង្ហាញ
-      setErrorMessage(error.message || 'មានបញ្ហាក្នុងការចូលប្រើ');
-    } finally {
-      setLoading(false);
+    } else {
+      setErrorMessage('ឈ្មោះអ្នកប្រើ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ!');
     }
+    
+    setLoading(false);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      
       <div className="absolute -top-20 -right-20 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl animate-pulse"></div>
       <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-purple-200/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
 
@@ -68,17 +74,15 @@ const AdminLogin = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          
           {errorMessage && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm text-center">
               {errorMessage}
             </div>
           )}
 
-          {/* Email / Username Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              អ៊ីមែល (Email)
+              ឈ្មោះអ្នកប្រើប្រាស់ (Username)
             </label>
             <div className="relative">
               <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -89,15 +93,14 @@ const AdminLogin = () => {
                 onChange={handleChange}
                 required
                 className="w-full bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-xl pl-12 pr-4 py-3 text-gray-700 placeholder-gray-400 outline-none focus:border-indigo-400 transition-colors duration-300"
-                placeholder="បញ្ចូលអ៊ីមែលរបស់អ្នក"
+                placeholder="បញ្ចូលឈ្មោះអ្នកប្រើ"
               />
             </div>
           </div>
 
-          {/* Password Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              ពាក្យសម្ងាត់
+              ពាក្យសម្ងាត់ (Password)
             </label>
             <div className="relative">
               <FaLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
