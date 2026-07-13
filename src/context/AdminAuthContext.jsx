@@ -1,3 +1,4 @@
+// src/context/AdminAuthContext.jsx
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '../utils/api';
 
@@ -6,26 +7,34 @@ const AdminAuthContext = createContext();
 export const AdminAuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  // ✅ បន្ថែម state សម្រាប់ isAuthenticated
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check if user is already logged in when the page refreshes
+  // ពិនិត្យ Token ពេលបើកទំព័រឡើងវិញ (Reload)
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
     const userData = localStorage.getItem('admin_user');
     
     if (token && userData) {
       try {
-        setUser(JSON.parse(userData));
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        setIsAuthenticated(true);  // ✅ កំណត់ isAuthenticated = true
+        console.log('✅ Admin authenticated!');
       } catch (e) {
         localStorage.removeItem('admin_token');
         localStorage.removeItem('admin_user');
+        setIsAuthenticated(false);
       }
+    } else {
+      setIsAuthenticated(false);
     }
     setLoading(false);
   }, []);
 
   const login = async (username, password) => {
     try {
-      console.log('🟡 Attempting login at path: /auth/login');
+      console.log('🟡 Attempting login to localhost...');
       
       const formData = new FormData();
       formData.append('username', username);
@@ -35,14 +44,17 @@ export const AdminAuthProvider = ({ children }) => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
-      // If successful, save token and user data
-      const { access_token } = response;
+      const { access_token } = response; 
+      
       if (access_token) {
         localStorage.setItem('admin_token', access_token); 
         
-        const userData = await api.get('/auth/me');
+        const userResponse = await api.get('/auth/me');
+        const userData = userResponse; 
+        
         localStorage.setItem('admin_user', JSON.stringify(userData));
         setUser(userData);
+        setIsAuthenticated(true);  // ✅ កំណត់ isAuthenticated = true
         
         console.log('✅ Login successful!');
         return { success: true };
@@ -51,45 +63,40 @@ export const AdminAuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('❌ Login error:', error);
-      
-      // --- CRITICAL FIX: Handle FastAPI 422 Error Details ---
+
       let errorMessage = 'ការចូលប្រើបរាជ័យ (សូមពិនិត្យឡើងវិញ)';
       
-      // 1. Check for FastAPI 422 validation errors (the {detail: Array(2)} you saw)
       if (error.response?.status === 422 && error.response?.data?.detail) {
         const detail = error.response.data.detail;
-        
-        // If it's an array of errors (FastAPI format)
         if (Array.isArray(detail) && detail.length > 0) {
           const firstError = detail[0];
-          
-          // Convert FastAPI English error to Khmer message
           if (firstError.loc && firstError.loc.includes('username')) {
             errorMessage = 'សូមបញ្ចូលឈ្មោះអ្នកប្រើប្រាស់ដែលត្រឹមត្រូវ';
           } else if (firstError.loc && firstError.loc.includes('password')) {
             errorMessage = 'ពាក្យសម្ងាត់ត្រូវតែមានយ៉ាងហោចណាស់ 8 តួអក្សរ';
           } else if (firstError.msg) {
-            // If backend sends a specific custom message
             errorMessage = firstError.msg;
           }
         } else if (typeof detail === 'string') {
           errorMessage = detail;
         }
       }
-      // 2. Check for 401 Unauthorized (Wrong Email or Password)
       else if (error.response?.status === 401) {
         errorMessage = 'ឈ្មោះអ្នកប្រើប្រាស់ ឬ ពាក្យសម្ងាត់មិនត្រឹមត្រូវ';
       }
-      // 3. Check for other backend custom messages
       else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
+      // ✅ សំខាន់៖ ធានាថា errorMessage គឺជា String ជានិច្ច
+      else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      } else {
+        errorMessage = 'មានបញ្ហាមិនដឹងមូលហេតុ។';
+      }
 
-      // Return the error to the frontend
-      return { 
-        success: false, 
-        message: errorMessage 
-      };
+      throw new Error(errorMessage); // ត្រឡប់ Error Object ដែលមាន message ជា String
     }
   };
 
@@ -97,6 +104,7 @@ export const AdminAuthProvider = ({ children }) => {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
     setUser(null);
+    setIsAuthenticated(false);  // ✅ កំណត់ isAuthenticated = false
     window.location.href = '/admin/login';
   };
 
@@ -104,7 +112,7 @@ export const AdminAuthProvider = ({ children }) => {
     user,
     login,
     logout,
-    isAuthenticated: !!user,
+    isAuthenticated,  // ✅ បន្ថែម isAuthenticated ទៅក្នុង value
     loading
   };
 

@@ -1,59 +1,60 @@
 import React from 'react';
-import ProductTableRow from './ProductTableRow';
-import { motion } from 'framer-motion';
-import { FaBox } from 'react-icons/fa';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 
-const ProductList = ({ products, onEdit, onDelete, loading }) => {
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64 bg-white/40 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        >
-          <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full"></div>
-        </motion.div>
-      </div>
-    );
-  }
+// ✅ FIX: Set default value for products to [] to prevent undefined crash
+const ProductList = ({ products = [], onDelete }) => {
+  
+  const handleDelete = (id) => {
+    if (window.confirm('តើអ្នកប្រាកដថាចង់លុបផលិតផលនេះទេ?')) {
+      onDelete(id);
+    }
+  };
 
   return (
-    <div className="bg-white/80 backdrop-blur-xl border border-gray-200/50 rounded-3xl shadow-2xl overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="min-w-full">
-          <thead className="bg-gray-100/50 backdrop-blur-sm border-b border-gray-200/50">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ផលិតផល</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ប្រភេទ</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">តម្លៃ</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ស្តុក</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ស្ថានភាព</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">សកម្មភាព</th>
+              <th className="text-left py-3 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">ឈ្មោះ</th>
+              <th className="text-left py-3 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">តម្លៃ</th>
+              <th className="text-left py-3 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">ស្តុក</th>
+              <th className="text-left py-3 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">ស្ថានភាព</th>
+              <th className="text-right py-3 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">សកម្មភាព</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200/50">
-            {products.map((product, index) => (
-              <motion.tr
-                key={product.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: index * 0.05 }}
-                className="hover:bg-gray-50/50 transition-colors duration-300"
-              >
-                <ProductTableRow
-                  product={product}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                />
-              </motion.tr>
-            ))}
-            {products.length === 0 && (
+          <tbody className="divide-y divide-gray-100">
+            {/* ✅ FIX: Use Array.isArray() to safely check before mapping */}
+            {Array.isArray(products) && products.length > 0 ? (
+              products.map((product) => (
+                <tr key={product.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="py-3 px-6 text-sm font-medium text-gray-800">{product.name}</td>
+                  <td className="py-3 px-6 text-sm text-gray-600">${product.price?.toFixed(2) || '0.00'}</td>
+                  <td className="py-3 px-6 text-sm text-gray-600">{product.stock || 0}</td>
+                  <td className="py-3 px-6">
+                    <span className={`px-2 py-1 text-xs rounded-full font-medium ${product.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      {product.is_active ? 'សកម្ម' : 'អសកម្ម'}
+                    </span>
+                  </td>
+                  <td className="py-3 px-6 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                        <FaEdit />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(product.id)}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
               <tr>
-                <td colSpan="6" className="text-center py-12">
-                  <div className="flex flex-col items-center justify-center text-gray-500">
-                    <FaBox className="text-4xl mb-2 opacity-50" />
-                    <p>មិនទាន់មានផលិតផលនៅឡើយទេ</p>
-                  </div>
+                <td colSpan="5" className="py-8 text-center text-gray-500 text-sm">
+                  មិនទាន់មានផលិតផលនៅឡើយទេ
                 </td>
               </tr>
             )}

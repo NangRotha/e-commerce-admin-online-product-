@@ -1,3 +1,4 @@
+// src/pages/Pages.jsx
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,15 +18,14 @@ const Pages = () => {
     content: '', 
     slug: '', 
     image_url: '',
-    features: [],     // <--- NEW: Array of features
-    gallery_images: [] // <--- NEW: Array of gallery image URLs
+    features: [],     
+    gallery_images: [] 
   });
   
   const [uploading, setUploading] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [newFeature, setNewFeature] = useState('');
 
-  // Slug options
   const availableSlugs = ['about', 'contact', 'terms', 'privacy', 'faq'];
 
   useEffect(() => {
@@ -66,7 +66,6 @@ const Pages = () => {
     }
   };
 
-  // ===== Feature Management =====
   const addFeature = () => {
     if (newFeature.trim() === '') {
       toast.error('Please enter a feature');
@@ -86,10 +85,12 @@ const Pages = () => {
     }));
   };
 
-  // ===== Image Upload Handlers =====
+  // ✅ កែតម្រូវ Upload Handlers នៅទីនេះ
   const uploadImageToCloudinary = async (file) => {
     const formDataUpload = new FormData();
-    formDataUpload.append('file', file);
+    // ✅ ត្រូវប្រាកដថា Field Name គឺ 'file'
+    formDataUpload.append('file', file); 
+    
     const response = await api.post('/admin/upload', formDataUpload);
     return response.url;
   };
@@ -103,6 +104,7 @@ const Pages = () => {
       setFormData(prev => ({ ...prev, image_url: url }));
       toast.success('Main image uploaded!');
     } catch (error) {
+      console.error('Upload error:', error);
       toast.error('Failed to upload main image');
     } finally {
       setUploading(false);
@@ -173,7 +175,6 @@ const Pages = () => {
     <div className="max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">📄 Pages Management</h1>
       
-      {/* ===== Form Section ===== */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -184,13 +185,10 @@ const Pages = () => {
         </h2>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* === Left Column: Basic Info + Main Image === */}
+          {/* === Left Column === */}
           <div className="space-y-6">
-            {/* Slug */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Slug (Page Identifier)
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Slug (Page Identifier)</label>
               <select
                 value={formData.slug}
                 onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
@@ -205,25 +203,13 @@ const Pages = () => {
               <p className="text-xs text-gray-400 mt-1">This will be the URL path (e.g. /about). Cannot be changed after creation.</p>
             </div>
 
-            {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Title
-              </label>
-              <input
-                type="text"
-                placeholder="Page Title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="input-field"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+              <input type="text" placeholder="Page Title" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="input-field" />
             </div>
 
-            {/* Main Image */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Main Image (Optional)
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Main Image (Optional)</label>
               <div className="flex items-center space-x-4">
                 <label className="cursor-pointer">
                   <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 hover:border-indigo-500 transition-colors duration-300 flex flex-col items-center justify-center w-32 h-32 bg-gray-50">
@@ -236,25 +222,12 @@ const Pages = () => {
                       </>
                     )}
                   </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleMainImageUpload}
-                    className="hidden"
-                  />
+                  <input type="file" accept="image/*" onChange={handleMainImageUpload} className="hidden" />
                 </label>
                 {formData.image_url && (
                   <div className="relative group">
-                    <img
-                      src={formData.image_url}
-                      alt="Page preview"
-                      className="w-32 h-32 object-cover rounded-xl border shadow-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, image_url: '' })}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg hover:bg-red-600 transition-colors duration-200"
-                    >
+                    <img src={formData.image_url} alt="Page preview" className="w-32 h-32 object-cover rounded-xl border shadow-sm" />
+                    <button type="button" onClick={() => setFormData({ ...formData, image_url: '' })} className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg hover:bg-red-600 transition-colors duration-200">
                       <FaTimes className="text-xs" />
                     </button>
                   </div>
@@ -266,43 +239,21 @@ const Pages = () => {
           {/* === Middle Column: Features === */}
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Key Features (Add important points)
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Key Features (Add important points)</label>
               <div className="flex space-x-2 mb-3">
-                <input
-                  type="text"
-                  placeholder="e.g. Free Shipping"
-                  value={newFeature}
-                  onChange={(e) => setNewFeature(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && addFeature()}
-                  className="input-field flex-1"
-                />
-                <button
-                  onClick={addFeature}
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-300"
-                >
+                <input type="text" placeholder="e.g. Free Shipping" value={newFeature} onChange={(e) => setNewFeature(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addFeature()} className="input-field flex-1" />
+                <button onClick={addFeature} className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-300">
                   <FaPlus />
                 </button>
               </div>
-
-              {/* Feature List */}
               <div className="space-y-2 mt-3">
                 {formData.features.map((feature, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-lg px-4 py-2"
-                  >
+                  <motion.div key={index} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-lg px-4 py-2">
                     <div className="flex items-center space-x-2">
                       <FaCheckCircle className="text-indigo-600 text-sm" />
                       <span className="text-sm text-gray-700 font-medium">{feature}</span>
                     </div>
-                    <button
-                      onClick={() => removeFeature(index)}
-                      className="text-red-500 hover:text-red-700 transition-colors duration-200"
-                    >
+                    <button onClick={() => removeFeature(index)} className="text-red-500 hover:text-red-700 transition-colors duration-200">
                       <FaTimes className="text-sm" />
                     </button>
                   </motion.div>
@@ -317,9 +268,7 @@ const Pages = () => {
           {/* === Right Column: Gallery Images === */}
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Gallery Images (Upload multiple)
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Gallery Images (Upload multiple)</label>
               <div className="space-y-3">
                 <label className="cursor-pointer block">
                   <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-indigo-500 transition-colors duration-300 flex flex-col items-center justify-center bg-gray-50">
@@ -332,30 +281,15 @@ const Pages = () => {
                       </>
                     )}
                   </div>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleGalleryUpload}
-                    className="hidden"
-                  />
+                  <input type="file" multiple accept="image/*" onChange={handleGalleryUpload} className="hidden" />
                 </label>
 
-                {/* Gallery Preview */}
                 {formData.gallery_images.length > 0 && (
                   <div className="grid grid-cols-3 gap-2 mt-3">
                     {formData.gallery_images.map((url, index) => (
                       <div key={index} className="relative group border rounded-lg overflow-hidden">
-                        <img
-                          src={url}
-                          alt={`Gallery ${index}`}
-                          className="w-full h-20 object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeGalleryImage(index)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                        >
+                        <img src={url} alt={`Gallery ${index}`} className="w-full h-20 object-cover" />
+                        <button type="button" onClick={() => removeGalleryImage(index)} className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                           <FaTimes className="text-xs" />
                         </button>
                       </div>
@@ -367,55 +301,28 @@ const Pages = () => {
           </div>
         </div>
 
-        {/* === Content Area (Full Width) === */}
         <div className="mt-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Content (Use \n for new lines)
-          </label>
-          <textarea
-            placeholder="Write your page content here..."
-            rows="6"
-            value={formData.content}
-            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-            className="input-field"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-2">Content (Use \n for new lines)</label>
+          <textarea placeholder="Write your page content here..." rows="6" value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} className="input-field" />
         </div>
 
-        {/* === Buttons === */}
         <div className="flex space-x-4 mt-6 pt-4 border-t">
-          <button 
-            onClick={handleSave} 
-            className="btn-primary flex items-center space-x-2 px-6 py-3 shadow-md hover:shadow-lg transition-all duration-300"
-            disabled={uploading || uploadingGallery}
-          >
+          <button onClick={handleSave} className="btn-primary flex items-center space-x-2 px-6 py-3 shadow-md hover:shadow-lg transition-all duration-300" disabled={uploading || uploadingGallery}>
             <FaSave /> <span>{editingPage ? 'Update Page' : 'Create Page'}</span>
           </button>
           {editingPage && (
-            <button 
-              onClick={() => {
-                setEditingPage(null);
-                setFormData({ title: '', content: '', slug: '', image_url: '', features: [], gallery_images: [] });
-              }} 
-              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-300"
-            >
+            <button onClick={() => { setEditingPage(null); setFormData({ title: '', content: '', slug: '', image_url: '', features: [], gallery_images: [] }); }} className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-300">
               Cancel
             </button>
           )}
         </div>
       </motion.div>
 
-      {/* ===== List Section ===== */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden"
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
         <div className="p-6 border-b border-gray-100 flex justify-between items-center">
           <h3 className="text-lg font-bold text-gray-800">📋 Existing Pages</h3>
           <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">{pages.length} pages</span>
         </div>
-        
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead className="bg-gray-50">
@@ -429,35 +336,13 @@ const Pages = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {pages.map((page) => (
                 <tr key={page.id} className="hover:bg-gray-50 transition-colors duration-200">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-600">
-                    {page.slug}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {page.title}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {page.image_url ? (
-                      <img src={page.image_url} alt={page.title} className="w-12 h-12 object-cover rounded-lg shadow-sm" />
-                    ) : (
-                      <span className="text-xs text-gray-400">No image</span>
-                    )}
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-600">{page.slug}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{page.title}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{page.image_url ? <img src={page.image_url} alt={page.title} className="w-12 h-12 object-cover rounded-lg shadow-sm" /> : <span className="text-xs text-gray-400">No image</span>}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <div className="flex items-center space-x-3">
-                      <button 
-                        onClick={() => handleEdit(page)} 
-                        className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 p-2 rounded-full transition-all duration-200"
-                        title="Edit"
-                      >
-                        <FaEdit className="text-lg" />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(page.slug)} 
-                        className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-full transition-all duration-200"
-                        title="Delete"
-                      >
-                        <FaTrash className="text-lg" />
-                      </button>
+                      <button onClick={() => handleEdit(page)} className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 p-2 rounded-full transition-all duration-200" title="Edit"><FaEdit className="text-lg" /></button>
+                      <button onClick={() => handleDelete(page.slug)} className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-full transition-all duration-200" title="Delete"><FaTrash className="text-lg" /></button>
                     </div>
                   </td>
                 </tr>

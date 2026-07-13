@@ -1,3 +1,4 @@
+// src/pages/AdminLogin.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
@@ -6,7 +7,7 @@ import { FaLock, FaUser, FaEye, FaEyeSlash, FaShieldAlt } from 'react-icons/fa';
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({
-    username: '', // Still using 'username' in state, but we send it as 'email'
+    username: '', 
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -28,12 +29,17 @@ const AdminLogin = () => {
     setLoading(true);
     setErrorMessage('');
 
-    const result = await login(formData.username, formData.password);
-    
-    if (result.success) {
-      navigate('/admin');
-    } else {
-      setErrorMessage(result.message || 'មានបញ្ហាក្នុងការចូលប្រើ');
+    // ✅ ប្រើ Try/Catch ព្រោះ Context បាន Throw Error ចេញមក
+    try {
+      const result = await login(formData.username, formData.password);
+      
+      if (result && result.success) {
+        navigate('/admin');
+      }
+    } catch (error) {
+      // ✅ ចាប់ Error Object ហើយទាញ message
+      const errorMessage = error?.message || 'មានបញ្ហាក្នុងការចូលប្រើ';
+      setErrorMessage(errorMessage);
     }
     
     setLoading(false);
