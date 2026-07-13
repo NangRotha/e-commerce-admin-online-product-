@@ -3,22 +3,19 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaLock, FaUser, FaEye, FaEyeSlash, FaShieldAlt } from 'react-icons/fa';
+import { useAdminAuth } from '../context/AdminAuthContext';
 
 const AdminLogin = () => {
-  // ============================================
-  // ✅ អ្នកអាចកំណត់ Username និង Password ត្រង់នេះ
-  // ============================================
-  const ADMIN_USERNAME = "myadmin";  // ប្តូរទៅតាមចិត្តអ្នក
-  const ADMIN_PASSWORD = "mysecret123"; // ប្តូរទៅតាមចិត្តអ្នក
+  const { login } = useAdminAuth();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    username: '', 
+    username: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -33,20 +30,14 @@ const AdminLogin = () => {
     setLoading(true);
     setErrorMessage('');
 
-    // ✅ ពិនិត្យ Username និង Password ជាមួយនឹងអ្វីដែលអ្នកបានកំណត់ខាងលើ
-    if (formData.username === ADMIN_USERNAME && formData.password === ADMIN_PASSWORD) {
-      
-      // ✅ បង្កើត Token ក្លែងក្លាយសម្រាប់រក្សាទុកនៅក្នុង Browser
-      const fakeToken = "this-is-a-fake-token-for-testing";
-      localStorage.setItem('admin_token', fakeToken);
-      localStorage.setItem('admin_user', JSON.stringify({ username: formData.username }));
-
-      // ✅ ទៅ Dashboard
-      navigate('/admin'); 
-    } else {
-      setErrorMessage('ឈ្មោះអ្នកប្រើ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ!');
+    try {
+      // ✅ ផ្ញើទៅ Backend (https://...onrender.com/api/auth/login) ដើម្បីផ្ទៀងផ្ទាត់ពិតប្រាកដ
+      await login(formData.username, formData.password);
+      navigate('/admin');
+    } catch (err) {
+      setErrorMessage(err.message || 'ការចូលប្រើបរាជ័យ');
     }
-    
+
     setLoading(false);
   };
 
